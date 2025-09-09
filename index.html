@@ -1,214 +1,129 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>몽환적인 픽셀 일러스트</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0d1117; /* Dark background */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            color: #ffffff;
-        }
-        .container {
-            max-width: 800px;
-            background-color: #161b22;
-            border-radius: 1.5rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            border: 2px solid #58a6ff;
-        }
-        canvas {
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            background-color: #2c3e50;
-        }
-        .pixelated-font {
-            font-family: 'Press Start 2P', cursive;
-        }
-    </style>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>마음의 평화 생성기</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #0c0a09;
+        color: #d4d4d4;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        text-align: center;
+        transition: background-color 2s ease;
+    }
+    .container {
+        position: relative;
+        z-index: 10;
+    }
+    .container-glow {
+        box-shadow: 0 0 50px rgba(79, 70, 229, 0.4);
+        transition: box-shadow 0.5s ease-in-out;
+    }
+    .container-glow:hover {
+        box-shadow: 0 0 70px rgba(79, 70, 229, 0.6);
+    }
+    .btn-play {
+        transition: transform 0.3s ease, background-color 0.3s ease;
+    }
+    .btn-play:hover {
+        transform: scale(1.05);
+    }
+</style>
+<!-- Tone.js 라이브러리 로드 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
 </head>
-<body class="p-4">
-    <div class="container mx-auto p-8 text-center">
-        <h1 class="text-3xl sm:text-4xl font-bold pixelated-font mb-4 text-purple-400">몽환적인 픽셀 일러스트</h1>
-        <p class="text-sm mb-8 text-gray-400">
-            코딩 스쿨 다니는 중입니다 
-        </p>
-        
-        <div id="illustration-container" class="mt-4 flex justify-center">
-            <canvas id="illustration-canvas" class="rounded-lg" width="256" height="256"></canvas>
-        </div>
-    </div>
+<body class="bg-gray-950 text-gray-200">
+<!-- 마음의 평화를 위한 UI -->
+<div class="container p-8 rounded-3xl container-glow max-w-lg mx-auto">
+    <h1 class="text-4xl font-bold mb-4 text-white">마음의 평화</h1>
+    <p class="text-gray-400 mb-8">
+        깊은 숨을 들이쉬고, 모든 걱정을 잠시 내려놓으세요.
+    </p>
 
-    <script>
-        window.onload = function() {
-            const canvas = document.getElementById('illustration-canvas');
-            const ctx = canvas.getContext('2d');
-            
-            // Changed from 16x16 to a more detailed 32x32 grid
-            const gridSize = 32;
-            const scale = canvas.width / gridSize;
-            let particles = [];
+    <button id="toggleButton" class="btn-play bg-indigo-600 text-white font-semibold py-3 px-8 rounded-full shadow-lg hover:bg-indigo-700">
+        <svg id="playIcon" class="w-6 h-6 inline-block mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"></path>
+        </svg>
+        <svg id="pauseIcon" class="w-6 h-6 inline-block mr-2 hidden" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z"></path>
+        </svg>
+        <span id="buttonText">재생하기</span>
+    </button>
 
-            // Define the color palette
-            const colors = {
-                0: '#1a1a2e', // Dark purplish blue for the sky
-                1: '#4a4269', // Island ground
-                2: '#e5e5e5', // Stars
-                3: '#52796f', // Tree leaves
-                4: '#a3b18a', // Tree trunk
-                5: '#7c6a85', // Soft shadow
-                6: '#ffffff', // Particle color
-            };
+    <p class="text-sm text-gray-500 mt-6">
+        걱정을 잠시 내려놓으세요
+    </p>
+</div>
 
-            // Define the pixel art data for a dreamy floating island (32x32 grid)
-            const islandData = [
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-            ];
-            
-            // Draw island shape
-            for (let y = 22; y < 28; y++) {
-                for (let x = 6; x < 26; x++) {
-                    islandData[y][x] = 1;
-                }
+<!-- 스크립트: 오디오와 UI 제어 -->
+<script>
+    let isPlaying = false;
+    let toneLoop;
+    const toggleButton = document.getElementById('toggleButton');
+    const buttonText = document.getElementById('buttonText');
+    const playIcon = document.getElementById('playIcon');
+    const pauseIcon = document.getElementById('pauseIcon');
+
+    // Tone.js를 사용하여 부드러운 앰비언트 사운드 생성
+    const synth = new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: "sine" },
+        envelope: {
+            attack: 4,
+            decay: 0.5,
+            sustain: 0.5,
+            release: 5
+        }
+    }).toDestination();
+
+    // 반복될 노트 시퀀스 정의
+    const notes = [
+        ["C3", "E3", "G3"],
+        ["G3", "B3", "D4"],
+        ["D3", "F#3", "A3"],
+        ["A3", "C4", "E4"]
+    ];
+
+    // 오디오 재생 및 중지
+    async function toggleAudio() {
+        // 브라우저의 오디오 정책을 준수하기 위해 사용자 클릭 시 Tone.start() 호출
+        await Tone.start();
+
+        if (isPlaying) {
+            // 이미 재생 중이면, 루프와 트랜스포트를 멈춥니다.
+            if (toneLoop) {
+                toneLoop.stop();
+                toneLoop.dispose(); // 루프 리소스 해제
             }
-            islandData[20][12] = 1; islandData[20][13] = 1; islandData[20][18] = 1; islandData[20][19] = 1;
-            islandData[21][10] = 1; islandData[21][11] = 1; islandData[21][20] = 1; islandData[21][21] = 1;
-            islandData[22][4] = 1; islandData[22][5] = 1; islandData[22][26] = 1; islandData[22][27] = 1;
-            islandData[23][3] = 1; islandData[23][28] = 1;
-            islandData[24][3] = 1; islandData[24][28] = 1;
-            islandData[25][4] = 1; islandData[25][27] = 1;
-            islandData[26][5] = 1; islandData[26][26] = 1;
+            Tone.Transport.stop(); // 트랜스포트 중지
+            buttonText.textContent = "재생하기";
+            playIcon.classList.remove('hidden');
+            pauseIcon.classList.add('hidden');
+        } else {
+            // 새로운 루프를 생성하고 트랜스포트를 시작합니다.
+            Tone.Transport.start();
 
-            // Draw the trees
-            islandData[20][15] = 4; islandData[19][15] = 4; islandData[18][15] = 4;
-            islandData[17][14] = 3; islandData[17][15] = 3; islandData[17][16] = 3;
-            islandData[18][14] = 3; islandData[18][16] = 3;
-            islandData[19][14] = 3; islandData[19][16] = 3;
-            islandData[16][15] = 3;
-            
-            islandData[18][22] = 4; islandData[17][22] = 4; islandData[16][22] = 4;
-            islandData[15][21] = 3; islandData[15][22] = 3; islandData[15][23] = 3;
-            islandData[16][21] = 3; islandData[16][23] = 3;
-            islandData[17][21] = 3; islandData[17][23] = 3;
-            islandData[14][22] = 3;
+            // 2초마다 화음이 재생되도록 스케줄링합니다.
+            toneLoop = new Tone.Loop(time => {
+                const noteSet = notes[Math.floor(Math.random() * notes.length)];
+                synth.triggerAttackRelease(noteSet, "2n", time);
+            }, "2n").start(0);
 
-            // Drawing the main pixel illustration
-            function drawIllustration() {
-                // Clear canvas before drawing
-                ctx.fillStyle = colors[0];
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // Draw the pixels from the data array
-                for (let y = 0; y < gridSize; y++) {
-                    for (let x = 0; x < gridSize; x++) {
-                        const colorIndex = islandData[y][x];
-                        if (colorIndex !== 0) {
-                            ctx.fillStyle = colors[colorIndex];
-                            ctx.fillRect(x * scale, y * scale, scale, scale);
-                        }
-                    }
-                }
+            buttonText.textContent = "일시정지";
+            playIcon.classList.add('hidden');
+            pauseIcon.classList.remove('hidden');
+        }
+        isPlaying = !isPlaying;
+    }
 
-                // Drawing floating stars (static)
-                const stars = [
-                    [3, 5], [7, 10], [12, 2], [18, 8], [25, 4], [28, 15]
-                ];
-                ctx.fillStyle = colors[2]; // Star color
-                stars.forEach(([x, y]) => {
-                    ctx.fillRect(x * scale, y * scale, scale, scale);
-                });
-            }
-
-            // New feature: Animated particles
-            function Particle(x, y, size) {
-                this.x = x;
-                this.y = y;
-                this.size = size;
-                this.speedX = (Math.random() - 0.5) * 0.2;
-                this.speedY = (Math.random() - 0.5) * 0.2;
-            }
-
-            // Update particle position
-            Particle.prototype.update = function() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-
-                // Wrap particles around the screen
-                if (this.x > canvas.width || this.x < 0) this.speedX *= -1;
-                if (this.y > canvas.height || this.y < 0) this.speedY *= -1;
-            };
-
-            // Draw particle
-            Particle.prototype.draw = function() {
-                ctx.fillStyle = colors[6]; // White particle color
-                ctx.fillRect(this.x, this.y, this.size, this.size);
-            };
-
-            // Initialize particles
-            function initParticles() {
-                for (let i = 0; i < 50; i++) {
-                    const x = Math.random() * canvas.width;
-                    const y = Math.random() * canvas.height;
-                    const size = Math.random() * 2 + 1;
-                    particles.push(new Particle(x, y, size));
-                }
-            }
-
-            // The main animation loop
-            function animate() {
-                // Clear the canvas and redraw the illustration
-                drawIllustration();
-
-                // Update and draw each particle
-                particles.forEach(p => {
-                    p.update();
-                    p.draw();
-                });
-
-                requestAnimationFrame(animate);
-            }
-
-            // Initial call
-            initParticles();
-            animate();
-        };
-    </script>
+    toggleButton.addEventListener('click', toggleAudio);
+</script>
 </body>
 </html>
